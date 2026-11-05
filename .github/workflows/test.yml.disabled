@@ -78,22 +78,22 @@ jobs:
 
 #    - name: Copy module composer files
 #      run: |
-#        mkdir -p site/custom/Espo/Modules/{@name}/
-#        cp src/files/custom/Espo/Modules/{@name}/composer.json \
-#          src/files/custom/Espo/Modules/{@name}/composer.lock \
-#          site/custom/Espo/Modules/{@name}/
+#        mkdir -p site/custom/Espo/Modules/ExtCalendar/
+#        cp src/files/custom/Espo/Modules/ExtCalendar/composer.json \
+#          src/files/custom/Espo/Modules/ExtCalendar/composer.lock \
+#          site/custom/Espo/Modules/ExtCalendar/
 #
 #    - name: Cache Module Vendor
 #      id: cache-module-vendor
 #      uses: actions/cache@v4
 #      with:
-#        path: site/custom/Espo/Modules/{@name}/vendor
+#        path: site/custom/Espo/Modules/ExtCalendar/vendor
 #        key: ${{ runner.os }}-module-${{ hashFiles('composer.lock') }}
 #
 #    - name: Composer install in module
 #      if: steps.cache-module-vendor.outputs.cache-hit != 'true'
 #      run: composer install
-#      working-directory: site/custom/Espo/Modules/{@name}/
+#      working-directory: site/custom/Espo/Modules/ExtCalendar/
 
     - name: Static analysis
       run: vendor/bin/phpstan

@@ -1,14 +1,14 @@
 {
-    "module": "{@name}",
-    "name": "{@nameLabel}",
-    "description": "{@description}",
-    "author": "{@author}",
-    "bundled": {@bundled},
+    "module": "ExtCalendar",
+    "name": "ExtCalendar",
+    "description": "Extended Calendar.",
+    "author": "Hanefi Turkoz",
+    "bundled": true,
     "acceptableVersions": [
-        ">=9.3.0"
+        ">=10.0.0"
     ],
     "php": [
-        ">=8.3"
+        ">=8.5"
     ],
     "scripts": []
 }

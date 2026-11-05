@@ -1,12 +1,12 @@
 {
-    "name": "espocrm/ext-{@nameHyphen}",
+    "name": "espocrm/ext-ext-calendar",
     "require": {
-        "php": ">=8.3"
+        "php": ">=8.5"
     },
     "autoload-dev": {
         "psr-4": {
-            "Espo\\Modules\\{@name}\\": "src/files/custom/Espo/Modules/{@name}",
-            "tests\\unit\\Espo\\Modules\\{@name}\\": "tests/unit/Espo/Modules/{@name}"
+            "Espo\\Modules\\ExtCalendar\\": "src/files/custom/Espo/Modules/ExtCalendar",
+            "tests\\unit\\Espo\\Modules\\ExtCalendar\\": "tests/unit/Espo/Modules/ExtCalendar"
         }
     },
     "require-dev": {
