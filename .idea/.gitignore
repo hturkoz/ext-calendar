@@ -1,0 +1,10 @@
+*
+!.gitignore
+!/codeStyles
+!/fileTemplates
+!/fileTemplates/**/*
+!/inspectionProfiles
+!misc.xml
+!/jsonSchemas.xml
+!/watcherTasks.xml
+!/file.template.settings.xml
