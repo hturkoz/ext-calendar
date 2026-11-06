@@ -1,0 +1,5 @@
+{
+  "pdf-lib": {
+    "path": "client/custom/modules/ext-calendar/lib/pdf-lib.js"
+  }
+}

@@ -1,0 +1,4 @@
+{  
+    "calendarView": "ext-calendar:views/calendar/calendar",
+    "timelineView": "ext-calendar:views/calendar/timeline"
+}

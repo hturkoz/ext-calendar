@@ -1,0 +1,5 @@
+{
+    "recordViews": {
+        "edit": "ext-calendar:views/preferences/record/edit"
+    }
+}

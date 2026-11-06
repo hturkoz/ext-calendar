@@ -1,6 +1,6 @@
 {
   "name": "espocrm-ext-ext-calendar",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "",
   "scripts": {
     "sa": "vendor/bin/phpstan",
@@ -19,10 +19,17 @@
   "author": "Hanefi Turkoz",
   "dependencies": {
     "espo-extension-tools": "github:espocrm/extension-tools#0.4.5",
-    "fs-extra": "^9.0.0"
+    "fs-extra": "^9.0.0",
+    "pdf-lib": "^1.17.1"
   },
   "engines": {
     "npm": ">=8",
     "node": ">=18"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^29.0.3",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "rollup": "^4.67.5"
   }
 }

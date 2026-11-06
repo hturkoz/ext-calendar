@@ -1,0 +1,13 @@
+{
+    "fields": {
+        "showWeekends": "Afficher les week-ends",
+        "slotFrom": "Heure de début",
+        "slotTo": "Heure de fin"
+    },
+    "labels": {
+        "Extended Calendar": "Calendrier étendu"
+    },
+    "messages": {
+        "slotFromMustBeBeforeSlotTo": "L'heure de début doit être antérieure à l'heure de fin."
+    }
+}

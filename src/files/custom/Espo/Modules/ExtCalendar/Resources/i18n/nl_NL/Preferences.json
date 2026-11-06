@@ -1,0 +1,13 @@
+{
+    "fields": {
+        "showWeekends": "Weekends weergeven",
+        "slotFrom": "Begintijd",
+        "slotTo": "Eindtijd"
+    },
+    "labels": {
+        "Extended Calendar": "Uitgebreide kalender"
+    },
+    "messages": {
+        "slotFromMustBeBeforeSlotTo": "De begintijd moet vóór de eindtijd liggen."
+    }
+}
