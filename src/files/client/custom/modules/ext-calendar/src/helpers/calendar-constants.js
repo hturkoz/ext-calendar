@@ -1,0 +1,106 @@
+/************************************************************************
+ * This file is part of EspoCRM.
+ *
+ * EspoCRM – Open Source CRM application.
+ * Copyright (C) 2014-2026 EspoCRM, Inc.
+ * Website: https://www.espocrm.com
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * The interactive user interfaces in modified source and object code versions
+ * of this program must display Appropriate Legal Notices, as required under
+ * Section 5 of the GNU Affero General Public License version 3.
+ *
+ * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
+ * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
+ ************************************************************************/
+
+/**
+ * @module ext-calendar:helpers/calendar/calendar-constants
+ */
+
+/**
+ * Supported PDF page formats, in points (`[width, height]`).
+ *
+ * Keys follow the `<FORMAT>_<ORIENTATION>` convention used by
+ * `CalendarPreferences.getPageFormat()`.
+ *
+ * @type {Object<string, [number, number]>}
+ */
+export const PAGE_FORMAT = {
+    A3_LANDSCAPE: [1191, 842],
+    A3_PORTRAIT: [842, 1191],
+
+    A4_LANDSCAPE: [842, 595],
+    A4_PORTRAIT: [595, 842],
+};
+
+/**
+ * Default PDF page format, used when no valid preference is set.
+ *
+ * @type {[number, number]}
+ */
+export const DEFAULT_PAGE_FORMAT = PAGE_FORMAT.A4_LANDSCAPE;
+
+/**
+ * RGB color palette (components in the 0–1 range, as expected by pdf-lib `rgb()`).
+ *
+ * @type {Object<string, [number, number, number]>}
+ */
+export const COLORS = {
+    border:       [0.85, 0.85, 0.85],
+    borderLight:  [0.90, 0.90, 0.90],
+    borderHalf:   [0.94, 0.94, 0.94],
+    textMuted:    [0.50, 0.50, 0.50],
+    textFaded:    [0.60, 0.60, 0.60],
+    todayBg:      [1.00, 0.95, 0.85],
+    otherMonthBg: [0.95, 0.95, 0.95],
+    indicator:    [1.00, 0.60, 0.00],
+    headerBg:     [0.96, 0.96, 0.96],
+    white:        [1.00, 1.00, 1.00],
+    black:        [0.00, 0.00, 0.00],
+};
+
+/**
+ * Named line colors, reusing the base palette.
+ *
+ * @type {{primary: [number, number, number], gridHalf: [number, number, number]}}
+ */
+export const LINE_COLORS = {
+    primary: COLORS.borderLight,
+    gridHalf: COLORS.borderHalf,
+};
+
+/**
+ * Grid margins (in points) for each PDF layout type.
+ *
+ * @type {Object<string, {left: number, right: number, top: number, bottom: number}>}
+ */
+export const GRID_MARGINS = {
+    weekly: { left: 40, right: 20, top: 70, bottom: 40 },
+    month:  { left: 40, right: 40, top: 70, bottom: 40 },
+    daily:  { left: 50, right: 30, top: 70, bottom: 40 },
+    team:   { left: 150, right: 20, top: 60, bottom: 40 },
+};
+
+/**
+ * Default export grouping all constants.
+ */
+export default {
+    PAGE_FORMAT,
+    DEFAULT_PAGE_FORMAT,
+    COLORS,
+    LINE_COLORS,
+    GRID_MARGINS
+};
