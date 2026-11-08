@@ -25,6 +25,46 @@
             ],
             "default": "20:00",
             "required": true
+        },
+        "calendarPageFormat": {
+            "type": "enum",
+            "options": [
+                "A4", "A3"
+            ],
+            "default": "A4",
+            "required": true
+        },
+        "timelinePageFormat": {
+            "type": "enum",
+            "options": [
+                "A4", "A3"
+            ],
+            "default": "A4",
+            "required": true
+        },
+        "calendarLayout": {
+            "type": "enum",
+            "options": [
+                "PORTRAIT", "LANDSCAPE"
+            ],
+            "default": "LANDSCAPE",
+            "required": true
+        },
+        "timelineLayout": {
+            "type": "enum",
+            "options": [
+                "PORTRAIT", "LANDSCAPE"
+            ],
+            "default": "LANDSCAPE",
+            "required": true
+        },
+        "calendarMargin": {
+            "type": "int",
+            "default": 30
+        },
+        "timelineMargin": {
+            "type": "int",
+            "default": 30
         }
     }
 }

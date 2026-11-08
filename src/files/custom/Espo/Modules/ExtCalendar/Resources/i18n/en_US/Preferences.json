@@ -1,14 +1,21 @@
 {
     "fields": {
-        "showWeekends": "Show week-ends",
+        "showWeekends": "Show weekends",
         "slotFrom": "Start time",
-        "slotTo": "End time"
+        "slotTo": "End time",
+        "calendarPageFormat": "Calendar page format",
+        "timelinePageFormat": "Timeline page format",
+        "calendarLayout": "Calendar layout",
+        "timelineLayout": "Timeline layout",
+        "calendarMargin": "Calendar margin",
+        "timelineMargin": "Timeline margin"
     },
     "labels": {
         "Extended Calendar": "Extended Calendar"
     },
     "messages": {
-        "slotFromMustBeBeforeSlotTo": "The start time must be earlier than the end time."
+        "slotFromMustBeBeforeSlotTo": "The start time must be earlier than the end time.",
+        "noPrintable": "Printing is not available."
     }
 }
 

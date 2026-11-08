@@ -1,13 +1,20 @@
 {
     "fields": {
-        "showWeekends": "Weekends weergeven",
+        "showWeekends": "Weekends tonen",
         "slotFrom": "Begintijd",
-        "slotTo": "Eindtijd"
+        "slotTo": "Eindtijd",
+        "calendarPageFormat": "Paginaformaat van de kalender",
+        "timelinePageFormat": "Paginaformaat van de tijdlijn",
+        "calendarLayout": "Oriëntatie van de kalender",
+        "timelineLayout": "Oriëntatie van de tijdlijn",
+        "calendarMargin": "Marge van de kalender",
+        "timelineMargin": "Marge van de tijdlijn"
     },
     "labels": {
         "Extended Calendar": "Uitgebreide kalender"
     },
     "messages": {
-        "slotFromMustBeBeforeSlotTo": "De begintijd moet vóór de eindtijd liggen."
+        "slotFromMustBeBeforeSlotTo": "De begintijd moet vroeger zijn dan de eindtijd.",
+        "noPrintable": "Afdrukken is niet beschikbaar."
     }
 }

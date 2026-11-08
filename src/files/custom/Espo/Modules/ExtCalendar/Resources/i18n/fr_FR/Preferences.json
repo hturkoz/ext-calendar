@@ -2,12 +2,19 @@
     "fields": {
         "showWeekends": "Afficher les week-ends",
         "slotFrom": "Heure de début",
-        "slotTo": "Heure de fin"
+        "slotTo": "Heure de fin",
+        "calendarPageFormat": "Format de page du calendrier",
+        "timelinePageFormat": "Format de page de la timeline",
+        "calendarLayout": "Orientation du calendrier",
+        "timelineLayout": "Orientation de la timeline",
+        "calendarMargin": "Marge du calendrier",
+        "timelineMargin": "Marge de la timeline"
     },
     "labels": {
         "Extended Calendar": "Calendrier étendu"
     },
     "messages": {
-        "slotFromMustBeBeforeSlotTo": "L'heure de début doit être antérieure à l'heure de fin."
+        "slotFromMustBeBeforeSlotTo": "L'heure de début doit être antérieure à l'heure de fin.",
+        "noPrintable": "L'impression n'est pas disponible."
     }
 }

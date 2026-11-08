@@ -31,24 +31,69 @@
 import TimelineView from 'crm:views/calendar/timeline';
 import Datepicker from 'ui/datepicker';
 import CalendarPreferences from 'ext-calendar:helpers/calendar-preferences';
-import PdfPrinter from 'ext-calendar:helpers/pdf-printer';
+import CalendarNormalizer from 'ext-calendar:helpers/calendar-normalizer';
+import PdfTimelinePrinter from 'ext-calendar:helpers/pdf-timeline-printer';
 
+/**
+ * Timeline calendar view.
+ *
+ * Extends the CRM timeline view with day navigation, slot preferences,
+ * a date picker and PDF printing support.
+ */
 export default class extends TimelineView {
 
+    /**
+     * @type {string}
+     */
     template = 'ext-calendar:calendar/timeline';
 
-     /** @type {CalendarPreferences} */
-    prefs;
-    /** @private */
-    wheelTimeout = null;
-    /** @private */
-    updatingPicker = false;
     /**
-     * Instance de timeline sur laquelle le sélecteur de date est branché.
+     * User calendar preferences.
+     *
+     * @type {CalendarPreferences}
+     */
+    prefs;
+
+    /**
+     * Debounce timeout used while the user scrolls with the wheel.
+     *
      * @private
+     * @type {number|null}
+     */
+    wheelTimeout = null;
+
+    /**
+     * Whether the date picker is currently being updated programmatically.
+     * Used to avoid feedback loops between the picker and the timeline.
+     *
+     * @private
+     * @type {boolean}
+     */
+    updatingPicker = false;
+
+    /**
+     * Timeline instance the date picker was bound to.
+     * Prevents binding the picker multiple times to the same timeline.
+     *
+     * @private
+     * @type {Object|null}
      */
     pickerTimeline = null;
 
+    /**
+     * Timeline instance the slot preferences were applied to.
+     * Prevents re-applying slot preferences multiple times per timeline.
+     *
+     * @private
+     * @type {Object|null}
+     */
+    slotsAppliedTo = null;
+
+    /**
+     * Sets up the view: initializes preferences and binds custom event handlers.
+     *
+     * @returns {void}
+     */
     setup() {
         super.setup();
 
@@ -62,19 +107,31 @@ export default class extends TimelineView {
         };
     }
 
+    /**
+     * Called after the view is rendered.
+     * Waits for the timeline to be available, then initializes the date picker
+     * and applies the slot preferences.
+     *
+     * @returns {void}
+     */
     afterRender() {
         super.afterRender();
 
         this.pickerTimeline = null;
 
-        this.waitForTimeline(() => this.initDatePicker());
-
+        this.waitForTimeline(() => {
+            this.applySlotPreferences();
+            this.initDatePicker();
+        });
     }
 
-        /**
-     * this.timeline async (after events).
+    /**
+     * Waits asynchronously until `this.timeline` is available and its DOM
+     * element is rendered (the timeline may be created after the events are loaded).
+     * Polls every 100ms, gives up after 50 attempts (~5 seconds).
      *
-     * @param {function(): void} callback
+     * @param {function(): void} callback - Called once the timeline is ready.
+     * @returns {void}
      */
     waitForTimeline(callback) {
         let attempts = 0;
@@ -91,23 +148,71 @@ export default class extends TimelineView {
 
             if (attempts > 50) {
                 clearInterval(timer);
-                console.error('[ext-calendar] timeline not ready');
             }
         }, 100);
 
         this.once('remove', () => clearInterval(timer));
     }
 
+    /**
+     * Displays the day of `date`, from `hourFrom` to `hourTo`.
+     *
+     * @param {moment.Moment} date
+     * @returns {void}
+     */
+    setTimelineWindow(date) {
+        const day = date.clone().startOf('day');
+
+        this.timeline.setWindow(
+            day.clone().add(this.prefs.slotFrom, 'hours').toDate(),
+            day.clone().add(this.prefs.slotTo, 'hours').toDate(),
+        );
+    }
+
+    /**
+     * Applies the slot range from preferences once per timeline instance,
+     * keeping the currently displayed day.
+     *
+     * @private
+     * @returns {void}
+     */
+    applySlotPreferences() {
+        if (!this.timeline || this.slotsAppliedTo === this.timeline) {
+            return;
+        }
+
+        this.slotsAppliedTo = this.timeline;
+
+        const range = this.timeline.getWindow();
+        const center = (range.start.getTime() + range.end.getTime()) / 2;
+        const day = moment.tz(center, this.getDateTime().getTimeZone());
+
+        this.setTimelineWindow(this.skipHiddenDays(day, 1));
+    }
+
+    /**
+     * Handles the "previous" button click: navigates one day backward.
+     *
+     * @returns {void}
+     */
     actionPrevious() {
         this.navigateDay(-1);
     }
 
+    /**
+     * Handles the "next" button click: navigates one day forward.
+     *
+     * @returns {void}
+     */
     actionNext() {
         this.navigateDay(1);
     }
 
     /**
-     * @param {number} direction -1 ou 1
+     * Navigates by the given number of days relative to the current window.
+     *
+     * @param {number} direction - `-1` for previous, `1` for next.
+     * @returns {void}
      */
     navigateDay(direction) {
         if (!this.timeline) {
@@ -126,9 +231,12 @@ export default class extends TimelineView {
     }
 
     /**
+     * Skips hidden days (weekends) from the given date, moving in the given direction,
+     * unless weekends are configured to be shown.
+     *
      * @param {moment.Moment} date
-     * @param {number} direction
-     * @return {moment.Moment}
+     * @param {number} direction - `-1` to move backward, `1` to move forward.
+     * @returns {moment.Moment}
      */
     skipHiddenDays(date, direction) {
         if (this.prefs.showWeekends) {
@@ -145,29 +253,76 @@ export default class extends TimelineView {
     }
 
     /**
-     * Affiche la journée de `date`, de hourFrom à hourTo.
+     * Handles date selection in the date picker input.
+     * Updates the timeline window to the selected date.
      *
-     * @param {moment.Moment} date
+     * @param {JQuery} $input - The date picker input.
+     * @returns {void}
      */
-    setTimelineWindow(date) {
-        const day = date.clone().startOf('day');
+    handleDatePickerChange($input) {
+        // Change triggered by the timeline itself: do not bounce back.
+        if (this.updatingPicker || !this.timeline) {
+            return;
+        }
 
-        this.timeline.setWindow(
-            day.clone().add(this.prefs.slotFrom, 'hours').toDate(),
-            day.clone().add(this.prefs.slotTo, 'hours').toDate(),
+        const value = $input.val();
+
+        if (!value) {
+            return;
+        }
+
+        const date = moment.tz(
+            value,
+            this.getDateTime().getDateFormat(),
+            this.getDateTime().getTimeZone(),
         );
+
+        if (!date.isValid()) {
+            return;
+        }
+
+        this.setTimelineWindow(this.skipHiddenDays(date, 1));
     }
 
-    /** @private */
+    /**
+     * Handles a `rangechanged` event from the timeline.
+     * Debounces the update when the change comes from the mouse wheel,
+     * then updates the date picker to reflect the visible range.
+     *
+     * @param {{start: Date, end: Date, event?: Event}} e
+     * @param {JQuery} $input - The date picker input.
+     * @returns {void}
+     */
+    handleRangeChanged(e, $input) {
+        const update = () => this.updateDatePicker(e, $input);
+
+        // Mouse wheel fires many events: wait for scrolling to end.
+        if (e.event instanceof WheelEvent) {
+            clearTimeout(this.wheelTimeout);
+            this.wheelTimeout = setTimeout(update, 1000);
+
+            return;
+        }
+
+        update();
+    }
+
+    /**
+     * Initializes the date picker bound to the date picker button.
+     * Only runs once per timeline instance.
+     *
+     * @private
+     * @returns {void}
+     */
     initDatePicker() {
         const $btn = this.$el.find('.date-picker-btn');
 
-        // Un seul branchement par instance de timeline.
+        // Bind only once per timeline instance.
         if (!$btn.length || !this.timeline || this.pickerTimeline === this.timeline) {
             return;
         }
 
-        this.extPickerTimeline = this.timeline;
+        this.pickerTimeline = this.timeline;
 
         const $input = $('<input type="text">')
             .attr('tabindex', '-1')
@@ -214,54 +369,12 @@ export default class extends TimelineView {
     }
 
     /**
-     * @param {JQuery} $input
-     */
-    handleDatePickerChange($input) {
-        // Changement provoqué par la timeline elle-même : on ne repart pas dans l'autre sens.
-        if (this.updatingPicker || !this.timeline) {
-            return;
-        }
-
-        const value = $input.val();
-
-        if (!value) {
-            return;
-        }
-
-        const date = moment.tz(
-            value,
-            this.getDateTime().getDateFormat(),
-            this.getDateTime().getTimeZone(),
-        );
-
-        if (!date.isValid()) {
-            return;
-        }
-
-        this.setTimelineWindow(this.skipHiddenDays(date, 1));
-    }
-
-    /**
-     * @param {{start: Date, end: Date, event?: Event}} e
-     * @param {JQuery} $input
-     */
-    handleRangeChanged(e, $input) {
-        const update = () => this.updateDatePicker(e, $input);
-
-        // La molette déclenche beaucoup d'événements : on attend la fin du défilement.
-        if (e.event instanceof WheelEvent) {
-            clearTimeout(this.wheelTimeout);
-            this.wheelTimeout = setTimeout(update, 1000);
-
-            return;
-        }
-
-        update();
-    }
-
-    /**
+     * Updates the date picker value to the middle of the given range
+     * and hides it.
+     *
      * @param {{start: Date, end: Date}} e
-     * @param {JQuery} $input
+     * @param {JQuery} $input - The date picker input.
+     * @returns {void}
      */
     updateDatePicker(e, $input) {
         const center = (e.start.getTime() + e.end.getTime()) / 2;
@@ -270,7 +383,7 @@ export default class extends TimelineView {
             .tz(center, this.getDateTime().getTimeZone())
             .format(this.getDateTime().getDateFormat());
 
-        this.extUpdatingPicker = true;
+        this.updatingPicker = true;
 
         try {
             $input.datepicker('setDate', value).datepicker('hide').blur();
@@ -279,25 +392,50 @@ export default class extends TimelineView {
         }
     }
 
+    /**
+     * Prints the currently visible timeline window to a PDF file
+     * using the configured page format and margins.
+     *
+     * @returns {Promise<void>}
+     */
     async actionPrint() {
         if (!this.timeline) {
             return;
         }
 
-        const events = this.timeline.getItems
-            ? this.timeline.getItems().map(item => ({
-                title: item.content,
-                start: item.start,
-                end: item.end,
-                allDay: false,
-            }))
-            : [];
+        const dateTime = this.getDateTime();
+        const range = this.timeline.getWindow();
 
-        await PdfPrinter.print({
+        const items = this.timeline.itemsData ? this.timeline.itemsData.get() : [];
+        const groups = this.timeline.groupsData ? this.timeline.groupsData.get() : [];
+
+        const data = CalendarNormalizer.normalizeTimeline(
+            items,
+            groups,
+            {
+                start: range.start,
+                end: range.end,
+                label: 'Day',
+                viewType: 'timeline',
+            },
+            {
+                timeZone: dateTime.getTimeZone(),
+                toMoment: value => dateTime.toMoment(value),
+            }
+        );
+
+        await PdfTimelinePrinter.print({
             title: 'Calendar — Timeline',
-            events,
+            period: data.period,
+            groups: data.groups,
+            items: data.items,
+            slotMinTime: this.prefs.getSlotMinTime(),
+            slotMaxTime: this.prefs.getSlotMaxTime(),
+            pageFormat: this.prefs.getPageFormat('timeline'),
+            margin: this.prefs.getMargin('timeline'),
+            dateFormat: dateTime.getDateFormat(),
+            timeFormat: dateTime.getTimeFormat(),
             filename: 'calendar-timeline.pdf',
-            dateFormat: this.getDateTime().getDateFormat(),
         });
     }
 }

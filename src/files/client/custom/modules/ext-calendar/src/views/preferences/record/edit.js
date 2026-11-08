@@ -60,7 +60,9 @@ export default class extends PreferencesEditView {
             name: 'extCalendarSettings',
             rows: [
                 [{name:'showWeekends'}, {name: 'slotFrom'}, {name: 'slotTo'}],
-            ],
+                [{name: 'calendarPageFormat'}, {name: 'calendarLayout'},{name: 'calendarMargin'} ],
+                [{name: 'timelinePageFormat'}, {name: 'timelineLayout'},{name: 'timelineMargin'} ]
+            ]
         });
         
     }
