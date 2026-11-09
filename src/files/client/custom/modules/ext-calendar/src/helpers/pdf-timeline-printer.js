@@ -1,5 +1,5 @@
 /************************************************************************
- * This file is part of EspoCRM.
+ * This file is for EspoCRM.
  *
  * EspoCRM – Open Source CRM application.
  * Copyright (C) 2014-2026 EspoCRM, Inc.
