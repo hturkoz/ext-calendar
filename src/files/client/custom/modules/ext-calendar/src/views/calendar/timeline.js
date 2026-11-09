@@ -30,6 +30,7 @@
 
 import TimelineView from 'crm:views/calendar/timeline';
 import Datepicker from 'ui/datepicker';
+import Model from 'model';
 import CalendarPreferences from 'ext-calendar:helpers/calendar-preferences';
 import CalendarNormalizer from 'ext-calendar:helpers/calendar-normalizer';
 import PdfTimelinePrinter from 'ext-calendar:helpers/pdf-timeline-printer';
@@ -104,6 +105,7 @@ export default class extends TimelineView {
             'click button[data-action="prev"]': () => this.actionPrevious(),
             'click button[data-action="next"]': () => this.actionNext(),
             'click button[data-action="print"]': () => this.actionPrint(),
+            'click button[data-action="findCommonSlots"]': () => this.actionFindCommonSlots(),
         };
     }
 
@@ -437,5 +439,187 @@ export default class extends TimelineView {
             timeFormat: dateTime.getTimeFormat(),
             filename: 'calendar-timeline.pdf',
         });
+    }
+
+    /** @type {string[]} IDs of the users included in the last common slots search. */
+    commonSlotUserIdList = [];
+
+    /** @type {{start: string, end: string}[]} Slots of the last search, as returned by the API (UTC). */
+    commonSlots = [];
+
+    /** @private */
+    commonSlotsBoundTo = null;
+
+    /**
+     * Opens the common slots search dialog. Once a search succeeds, closes the dialog
+     * and shows the result on the timeline.
+     */
+    actionFindCommonSlots() {
+        const model = new Model();
+
+        this.createView('dialog', 'ext-calendar:views/calendar/modals/common-slots', {model}, view => {
+            this.listenToOnce(view, 'slots-found', data => {
+                view.close();
+                this.showTimelineWithCommonSlots(data);
+            });
+
+            view.render();
+        });
+    }
+
+    /**
+     * @param {{
+     *     userIdList: string[],
+     *     userNames: Object<string, string>,
+     *     commonSlots: {start: string, end: string}[]
+     * }} data Search result, as emitted by the dialog.
+     */
+    showTimelineWithCommonSlots(data) {
+        const {userIdList, userNames, commonSlots} = data;
+
+        this.updateTimelineWithCommonSlots(userIdList, userNames, commonSlots);
+    }
+
+    /**
+     * Shows the result of a search. Every user already displayed stays on the timeline;
+     * only the users of the search get their free slots highlighted.
+     *
+     * @param {string[]} userIdList Users included in the search.
+     * @param {Object<string, string>} userNames User names by ID.
+     * @param {{start: string, end: string}[]} commonSlots Slots as returned by the API (UTC).
+     */
+    updateTimelineWithCommonSlots(userIdList, userNames, commonSlots) {
+        // Drop the slots of the previous search first.
+        this.removeCommonSlotItems();
+
+        this.commonSlotUserIdList = userIdList;
+        this.commonSlots = commonSlots || [];
+
+        this.addMissingUsers(userIdList, userNames);
+
+        if (this.commonSlots.length) {
+            this.timeline.moveTo(this.toSlotMoment(this.commonSlots[0].start).toDate());
+        }
+
+        this.bindCommonSlots();
+        this.runFetch();
+        this.ensureCommonSlots();
+    }
+
+    /**
+     * Adds the searched users that are not displayed yet. Displayed users are never removed.
+     * Outside the shared calendar, the list is replaced by the searched users.
+     *
+     * @private
+     * @param {string[]} userIdList
+     * @param {Object<string, string>} userNames
+     */
+    addMissingUsers(userIdList, userNames) {
+        const isShared = this.calendarType === 'shared';
+        const displayed = isShared ? this.userList : [];
+
+        const missing = userIdList
+            .filter(id => !displayed.some(user => user.id === id))
+            .map(id => ({id, name: userNames[id] || id}));
+
+        if (isShared && !missing.length) {
+            return;
+        }
+
+        this.userList = [...displayed, ...missing];
+        this.calendarType = 'shared';
+
+        this.initGroupsDataSet();
+        this.timeline.setGroups(this.groupsDataSet);
+    }
+
+    /**
+     * Re-adds the common slots each time the timeline is redrawn, so they survive the
+     * reload of events (runFetch) without a timer. Bound once per timeline instance.
+     *
+     * @private
+     */
+    bindCommonSlots() {
+        if (!this.timeline || this.commonSlotsBoundTo === this.timeline) {
+            return;
+        }
+
+        this.commonSlotsBoundTo = this.timeline;
+
+        this.timeline.on('changed', () => this.ensureCommonSlots());
+    }
+
+    /**
+     * Adds the slot items that are not on the timeline yet.
+     *
+     * @private
+     */
+    ensureCommonSlots() {
+        if (!this.timeline || !this.commonSlots.length) {
+            return;
+        }
+
+        const missing = this.buildCommonSlotItems()
+            .filter(item => !this.timeline.itemsData.get(item.id));
+
+        if (missing.length) {
+            this.timeline.itemsData.add(missing);
+        }
+    }
+
+    /**
+     * One background item per slot and per searched user, placed in the row of that user.
+     *
+     * @private
+     * @return {Object[]}
+     */
+    buildCommonSlotItems() {
+        return this.commonSlots.flatMap((slot, index) =>
+            this.commonSlotUserIdList.map(userId => ({
+                id: `common-slot-${userId}-${index}`,
+                group: userId,
+                type: 'background',
+                className: 'common-slot-highlight',
+                content: '',
+                start: this.toSlotMoment(slot.start).toDate(),
+                end: this.toSlotMoment(slot.end).toDate(),
+            }))
+        );
+    }
+
+    /**
+     * Stops highlighting and removes the common slots from the timeline.
+     */
+    clearCommonSlots() {
+        this.commonSlots = [];
+        this.commonSlotUserIdList = [];
+
+        this.removeCommonSlotItems();
+    }
+
+    /**
+     * Removes the slot items currently on the timeline.
+     *
+     * @private
+     */
+    removeCommonSlotItems() {
+        if (!this.timeline) {
+            return;
+        }
+
+        const ids = this.timeline.itemsData.getIds({
+            filter: item => String(item.id).startsWith('common-slot-'),
+        });
+
+        this.timeline.itemsData.remove(ids);
+    }
+
+    /**
+     * @private
+     * @param {string} value Date-time in UTC, internal format ('YYYY-MM-DD HH:mm:ss').
+     * @return {moment.Moment} In the time zone of the user preferences.
+     */
+    toSlotMoment(value) {
+        return this.getDateTime().toMoment(value);
     }
 }

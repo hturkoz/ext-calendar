@@ -1,1 +1,7 @@
-[]
+[
+    {
+        "route": "/Activities/findCommonSlots",
+        "method": "post",
+        "actionClassName": "Espo\\Modules\\ExtCalendar\\Api\\Activities\\FindCommonSlots"
+    }
+]
