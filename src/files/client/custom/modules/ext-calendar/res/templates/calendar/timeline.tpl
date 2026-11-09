@@ -22,6 +22,9 @@
                 <button class="btn btn-text btn-icon" title="{{translate 'Print'}}" data-action="print">
                     <span class="fas fa-print"></span>
                 </button> 
+                <button class="btn btn-text btn-icon" title="{{translate 'Search'}}" data-action="findCommonSlots">
+                    <span class="fas fa-user-group"></span>
+                </button> 
             </div>
 
     {{#if calendarTypeSelectEnabled}}  
@@ -55,11 +58,10 @@
     <div class="date-title col-sm-4 hidden-xs">  
         <h4><span style="cursor: pointer;" data-action="refresh" title="{{translate 'Refresh'}}"></span></h4>
     </div>  
-    <div class="col-sm-4 col-xs-12"> 
-        <div class="btn-group pull-right mode-buttons">   
+    <div class="col-sm-4 col-xs-12">
             {{{modeButtons}}}  
         </div>  
-    </div>  
-</div>  
+    </div>
 {{/if}}
+
 <div class="timeline"></div>
