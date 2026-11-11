@@ -9,3 +9,4 @@
 /vendor
 /.phpunit.result.cache
 /composer.phar
+src/files/client/custom/modules/ext-calendar/src/helpers/.DS_Store
