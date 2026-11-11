@@ -11,6 +11,4 @@
 
 ## License
 
-(change this section after initialization)
-
 Change the license in `LICENSE` file.
