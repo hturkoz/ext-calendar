@@ -11,4 +11,4 @@
 
 ## License
 
-Change the license in `LICENSE` file.
+See LICENSE file.
